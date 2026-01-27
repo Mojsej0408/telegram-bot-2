@@ -1,0 +1,20 @@
+{
+  "vfAEBP2Y": {
+    "activated": true,
+    "user_id": 5978354820,
+    "expires_at": "2026-05-05",
+    "duration_days": 99
+  },
+  "WSkBkK44": {
+    "activated": false,
+    "user_id": null,
+    "expires_at": null,
+    "duration_days": 1
+  },
+  "RXwLKmzc": {
+    "activated": false,
+    "user_id": null,
+    "expires_at": null,
+    "duration_days": 1
+  }
+}
