@@ -14,11 +14,13 @@ from PIL import Image
 
 
 # === КОНФИГ ===
-TG_TOKEN = '7648973124:AAGfrBkPu7T6FPSHnL_1g72Ph5tqor76PEw'
+TG_TOKEN = '8126065320:AAEoHYrWhsKm6U6Qppv22Gzubus1sStERkY'
 VK_TOKEN = 'vk1.a.MUz6b5M2fFq0gwLPT5-8YGj-BBgjv8iXWtSs9Y2fXLlvIXK5IQot7Y2TkgQOi94Zu0Iy49prjYNTR1wa9Tu60Fr1-T8J1_hEQgN6M1RPin5qYSSd8FSIeuzo43-00CYU6QZ8GTy7gsEhAQyAwI6JwygmR_3y3vCJztuV8A7BMk-CY9gdq4QzXIEvcLJamm7MJIV3Wa0oEzA6xSticp-kAg'
 
 ADMIN_IDS = [5978354820]  # ЗАМЕНИ на свой Telegram ID
 ACTIVATION_FILE = 'activations.json'
+MIN_DELAY = 300
+
 
 # === ГРУППЫ ===
 GAME_GROUPS = {
@@ -171,21 +173,30 @@ def start(update: Update, context: CallbackContext):
 @require_activation
 def handle_text(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
+
     if user_id not in user_state:
         update.message.reply_text("Сначала введи /start")
         return
 
     state = user_state[user_id]
+
     if state["text"] is None:
         state["text"] = update.message.text
         show_game_choice(update, context)
+
     elif state["delay"] is None:
         try:
             delay = int(update.message.text)
-            if delay < 0:
-                raise ValueError
+            if delay < MIN_DELAY:
+                update.message.reply_text(
+                    f"⛔ Минимальная задержка — {MIN_DELAY} секунд.\n"
+                    f"Введи значение не меньше {MIN_DELAY}."
+                )
+                return
+
             state["delay"] = delay
             show_launch_button(update, context)
+
         except ValueError:
             update.message.reply_text("Введи число для задержки в секундах.")
     else:
@@ -256,7 +267,10 @@ def button_handler(update: Update, context: CallbackContext):
         if not state["groups"]:
             query.answer("❗ Выбери хотя бы одну группу.", show_alert=True)
             return
-        query.edit_message_text("Теперь введи задержку в секундах перед запуском пиара:")
+        query.edit_message_text(
+    f"Теперь введи задержку в секундах перед запуском пиара:\n"
+    f"⚠️ Минимальная задержка — {MIN_DELAY} секунд"
+)
     elif data == "launch":
         if not state["text"] or not state["groups"] or state["delay"] is None:
             context.bot.send_message(chat_id=user_id, text="❗ Заполнены не все параметры.")
