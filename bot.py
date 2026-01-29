@@ -243,6 +243,11 @@ def handle_text(update: Update, context: CallbackContext):
     if state["text"] is None:
         state["text"] = update.message.text
         show_game_choice(update, context, 0)
+        return
+
+    if state["game"] is None:
+        update.message.reply_text("❗ Сначала выбери игру кнопками выше.")
+        return
 
     elif state["delay"] is None:
         try:
@@ -447,3 +452,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
