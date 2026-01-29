@@ -232,7 +232,6 @@ def handle_text(update: Update, context: CallbackContext):
     else:
         update.message.reply_text("Пожалуйста, используй кнопки управления.")
 
-@require_activation
 def show_game_choice(update: Update, context: CallbackContext, page=0):
     user_id = update.effective_chat.id
     games = list(GAME_GROUPS.keys())
@@ -383,3 +382,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
