@@ -330,6 +330,7 @@ def button_handler(update: Update, context: CallbackContext):
     elif data == "back_to_games":
         state["game"] = None
         state["groups"] = []
+        state["delay"] = None
         show_game_choice(update, context, 0)
         return
 
@@ -416,3 +417,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
