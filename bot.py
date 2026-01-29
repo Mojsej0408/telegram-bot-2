@@ -309,6 +309,7 @@ def show_group_menu(update: Update, context: CallbackContext):
         ])
 
     buttons.append([InlineKeyboardButton("✅ Выбрать все", callback_data="select_all")])
+    buttons.append([InlineKeyboardButton("⬅️ Назад к играм", callback_data="back_to_games")])
     buttons.append([InlineKeyboardButton("Далее ➡️", callback_data="next_delay")])
 
     update.callback_query.edit_message_text(
@@ -350,6 +351,15 @@ def button_handler(update: Update, context: CallbackContext):
         state["game"] = data.split("game_")[1]
         state["groups"] = []
         show_group_menu(update, context)
+
+    elif data == "back_to_games":
+    # очищаем выбранные группы
+        state["groups"] = []
+        state["game"] = None
+
+    # возвращаем меню игр (редактируем текущее сообщение)
+        show_game_choice(update, context)
+
 
     elif data.startswith("group_"):
         gid = int(data.split("_")[1])
@@ -421,8 +431,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
 
