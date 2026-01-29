@@ -119,7 +119,7 @@ def activate(update: Update, context: CallbackContext):
     code = args[0]
     data = load_activations()
     if code not in data:
-        update.message.reply_text("❌ Код не найден.")
+        update.message.reply_text("❌ Код уже активирован или не найден.")
         return
 
     if data[code]['activated']:
@@ -337,4 +337,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
