@@ -25,6 +25,9 @@ EMOJIS = [
     "🔥", "🚀", "🎮", "💥", "⚡", "👾", "😎",
     "💎", "🧠", "📢", "✨", "🎯"
 ]
+# === ПАГИНАЦИЯ ИГР ===
+GAMES_PER_PAGE = 4
+
 
 
 
@@ -209,7 +212,7 @@ def handle_text(update: Update, context: CallbackContext):
 
     if state["text"] is None:
         state["text"] = update.message.text
-        show_game_choice(update, context)
+        show_game_choice(update, context, 0)
 
     elif state["delay"] is None:
         try:
@@ -230,14 +233,44 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("Пожалуйста, используй кнопки управления.")
 
 @require_activation
-def show_game_choice(update: Update, context: CallbackContext):
-    user_id = update.message.chat_id
-    keyboard = [[InlineKeyboardButton(f"🌐 {g}", callback_data=f"game_{g}")] for g in GAME_GROUPS.keys()]
-    context.bot.send_message(
-        chat_id=user_id,
-        text="Выбери игру для которой хочешь запустить пиар:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+def show_game_choice(update: Update, context: CallbackContext, page=0):
+    user_id = update.effective_chat.id
+    games = list(GAME_GROUPS.keys())
+
+    start = page * GAMES_PER_PAGE
+    end = start + GAMES_PER_PAGE
+    page_games = games[start:end]
+
+    keyboard = [
+        [InlineKeyboardButton(f"🎮 {g}", callback_data=f"game_{g}")]
+        for g in page_games
+    ]
+
+    nav_buttons = []
+    if page > 0:
+        nav_buttons.append(
+            InlineKeyboardButton("⬅️ Назад", callback_data=f"games_page_{page-1}")
+        )
+    if end < len(games):
+        nav_buttons.append(
+            InlineKeyboardButton("Вперёд ➡️", callback_data=f"games_page_{page+1}")
+        )
+
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+
+    if update.callback_query:
+        update.callback_query.edit_message_text(
+            text="Выбери игру для которой хочешь запустить пиар:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    else:
+        context.bot.send_message(
+            chat_id=user_id,
+            text="Выбери игру для которой хочешь запустить пиар:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
 
 @require_activation
 def show_group_menu(update: Update, context: CallbackContext):
@@ -275,6 +308,12 @@ def button_handler(update: Update, context: CallbackContext):
     data = query.data
     query.answer()
     state = user_state[user_id]
+    if data.startswith("games_page_"):
+        page = int(data.split("_")[-1])
+        query.delete_message()
+        show_game_choice(update, context, page)
+        return
+
 
     if data.startswith("game_"):
         state["game"] = data.split("game_")[1]
@@ -344,6 +383,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
