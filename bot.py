@@ -230,7 +230,7 @@ def start(update: Update, context: CallbackContext):
     }
 
     update.message.reply_text("Привет! Отправь мне текст для пиара.")
-    log(context, f"▶️ START\nID: {user_id}")
+    log(context, f"▶️ Прописал команду /start\nID: {user_id}")
 
 
 @require_activation
@@ -252,7 +252,6 @@ def handle_text(update: Update, context: CallbackContext):
             delay = int(update.message.text)
             if delay < MIN_DELAY:
                 update.message.reply_text(
-                    "Теперь введи задержку в секундах перед запуском пиара:\n"
                     f"⚠️ Минимальная задержка — {MIN_DELAY} секунд."
                 )
                 return
@@ -290,7 +289,7 @@ def show_game_choice(update: Update, context: CallbackContext, page=0):
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     else:
-        context.bot.send_message(
+        update.callback_query.edit_message_text(
             chat_id=user_id,
             text="Выбери игру для которой хочешь запустить пиар:",
             reply_markup=InlineKeyboardMarkup(keyboard)
@@ -367,7 +366,8 @@ def button_handler(update: Update, context: CallbackContext):
 
     elif data == "next_delay":
         query.edit_message_text(
-            f"Введи задержку в секундах (мин {MIN_DELAY})"
+        "Теперь введи задержку в секундах перед запуском пиара:\n\n"
+        f"⚠️ Минимальная задержка — {MIN_DELAY} секунд."
         )
 
     elif data == "launch":
@@ -422,5 +422,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
