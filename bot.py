@@ -280,6 +280,7 @@ def show_group_menu(update: Update, context: CallbackContext):
         selected = "✅" if gid in user_state[user_id]["groups"] else ""
         buttons.append([InlineKeyboardButton(f"{selected} {name}", callback_data=f"group_{gid}")])
     buttons.append([InlineKeyboardButton("✅ Выбрать все", callback_data="select_all")])
+    buttons.append([InlineKeyboardButton("⬅️ Назад к играм", callback_data="back_to_games")])
     buttons.append([InlineKeyboardButton("Далее ➡️", callback_data="next_delay")])
     context.bot.send_message(
         chat_id=user_id,
@@ -381,5 +382,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
