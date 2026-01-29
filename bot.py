@@ -1,5 +1,13 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    CallbackQueryHandler,
+    MessageHandler,
+    Filters,
+    CallbackContext
+)
+
 import vk_api
 import threading
 import time
@@ -11,24 +19,22 @@ from datetime import datetime, timedelta
 from PIL import Image
 
 
-
-
 # === КОНФИГ ===
 TG_TOKEN = '7648973124:AAGfrBkPu7T6FPSHnL_1g72Ph5tqor76PEw'
 VK_TOKEN = 'vk1.a.MUz6b5M2fFq0gwLPT5-8YGj-BBgjv8iXWtSs9Y2fXLlvIXK5IQot7Y2TkgQOi94Zu0Iy49prjYNTR1wa9Tu60Fr1-T8J1_hEQgN6M1RPin5qYSSd8FSIeuzo43-00CYU6QZ8GTy7gsEhAQyAwI6JwygmR_3y3vCJztuV8A7BMk-CY9gdq4QzXIEvcLJamm7MJIV3Wa0oEzA6xSticp-kAg'
 
-ADMIN_IDS = [5978354820]  # ЗАМЕНИ на свой Telegram ID
-ADMIN_LOG_CHAT_ID = -1003847656490  # ID группы
+ADMIN_IDS = [5978354820]
+ADMIN_LOG_CHAT_ID = -1003847656490
+
 ACTIVATION_FILE = 'activations.json'
 MIN_DELAY = 300
+
 EMOJIS = [
-    "🔥", "🚀", "🎮", "💥", "⚡", "👾", "😎",
-    "💎", "🧠", "📢", "✨", "🎯"
+    "🔥", "🚀", "🎮", "💥", "⚡", "👾",
+    "😎", "💎", "🧠", "📢", "✨", "🎯"
 ]
-# === ПАГИНАЦИЯ ИГР ===
+
 GAMES_PER_PAGE = 4
-
-
 
 
 # === ГРУППЫ ===
@@ -45,7 +51,7 @@ GAME_GROUPS = {
         "CS GO|CS 1.6|CSS V34|ПИАР": -38938816,
         "ПИАР СЕРВЕРОВ CS": -167982194
     },
-     "Rust": {
+    "Rust": {
         "RUST сервера": -42452760,
         "RUST | Пиар Серверов": -189208041,
         "Пиар RUST": -63469938
@@ -62,7 +68,7 @@ GAME_GROUPS = {
         "КЛАН/ТУРНИРЫ/КВ/МИКСЫ": -185186597,
         "Найти клан| Забить КВ": -165745863,
         "поиск кланов и кв": -172720565
-     },
+    },
     "Minecraft№2": {
         "Minecraft": -175474414,
         "Майн группа1": -63912735,
@@ -79,12 +85,15 @@ GAME_GROUPS = {
     }
 }
 
+
 user_state = {}
 activated_users = {}
+
 
 # === VK API ===
 vk_session = vk_api.VkApi(token=VK_TOKEN)
 vk = vk_session.get_api()
+
 
 # === АКТИВАЦИЯ ===
 def load_activations():
@@ -93,10 +102,11 @@ def load_activations():
             return json.load(f)
     return {}
 
+
 def save_activations(data):
     with open(ACTIVATION_FILE, 'w') as f:
         json.dump(data, f, indent=2)
-        
+
 
 def generate_code(duration_days):
     code = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
@@ -110,6 +120,7 @@ def generate_code(duration_days):
     save_activations(data)
     return code
 
+
 def check_activation(user_id):
     data = load_activations()
     for code, entry in data.items():
@@ -119,15 +130,18 @@ def check_activation(user_id):
                 return True
     return False
 
+
 def activate(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
     args = context.args
+
     if not args:
         update.message.reply_text("⚠️ Введите код активации: /activate <код>")
         return
 
     code = args[0]
     data = load_activations()
+
     if code not in data:
         update.message.reply_text("❌ Код уже активирован или не найден.")
         return
@@ -143,11 +157,14 @@ def activate(update: Update, context: CallbackContext):
     data[code]['user_id'] = user_id
     data[code]['expires_at'] = expires
     save_activations(data)
+
     log(context, f"🔑 АКТИВАЦИЯ\nID: {user_id}\nKEY: {code}")
     update.message.reply_text(f"✅ Активация успешна! Доступ до: {expires}")
 
+
 def gen_code(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
+
     if user_id not in ADMIN_IDS:
         update.message.reply_text("⛔ У тебя нет прав использовать эту команду.")
         return
@@ -159,22 +176,31 @@ def gen_code(update: Update, context: CallbackContext):
 
     days = int(args[0])
     code = generate_code(days)
-    update.message.reply_text(f"✅ Код сгенерирован на {days} дней:\n🔑 <code>{code}</code>", parse_mode="HTML")
+
+    update.message.reply_text(
+        f"✅ Код сгенерирован на {days} дней:\n🔑 <code>{code}</code>",
+        parse_mode="HTML"
+    )
+
 
 def require_activation(func):
     def wrapper(update: Update, context: CallbackContext):
         user_id = update.effective_chat.id
         if not check_activation(user_id):
-            context.bot.send_message(chat_id=user_id, text="🔒 Пожалуйста, активируйте доступ командой /activate <код>")
+            context.bot.send_message(
+                chat_id=user_id,
+                text="🔒 Пожалуйста, активируйте доступ командой /activate <код>"
+            )
             return
         return func(update, context)
     return wrapper
 
+
 def add_random_emoji(text: str) -> str:
-    # шанс добавить эмодзи (80%)
     if random.random() < 0.95:
         return f"{text}\n\n{random.choice(EMOJIS)}"
     return text
+
 
 def log(context, text):
     try:
@@ -182,25 +208,27 @@ def log(context, text):
     except:
         pass
 
+
 # === ОСНОВНОЙ ФУНКЦИОНАЛ ===
 @require_activation
 def start(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
+
     if user_id in user_state and user_state[user_id].get("is_running"):
         user_state[user_id]["is_running"] = False
         context.bot.send_message(chat_id=user_id, text="🛑 Предыдущий пиар остановлен.")
 
     user_state[user_id] = {
-    "text": None,
-    "game": None,
-    "groups": [],
-    "delay": None,
-    "waiting_delay": False,
-    "is_running": False
-}
+        "text": None,
+        "game": None,
+        "groups": [],
+        "delay": None,
+        "is_running": False
+    }
 
     update.message.reply_text("Привет! Отправь мне текст для пиара.")
     log(context, f"▶️ START\nID: {user_id}")
+
 
 @require_activation
 def handle_text(update: Update, context: CallbackContext):
@@ -211,18 +239,14 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     state = user_state[user_id]
-    text = update.message.text
 
-    # 1. Ждём рекламный текст
     if state["text"] is None:
-        state["text"] = text
+        state["text"] = update.message.text
         show_game_choice(update, context, 0)
-        return
 
-    # 2. Ждём задержку ТОЛЬКО если нажали "Далее"
-    if state.get("waiting_delay"):
+    elif state["delay"] is None:
         try:
-            delay = int(text)
+            delay = int(update.message.text)
             if delay < MIN_DELAY:
                 update.message.reply_text(
                     f"⛔ Минимальная задержка — {MIN_DELAY} секунд.\n"
@@ -231,16 +255,12 @@ def handle_text(update: Update, context: CallbackContext):
                 return
 
             state["delay"] = delay
-            state["waiting_delay"] = False
             show_launch_button(update, context)
-            return
 
         except ValueError:
-            update.message.reply_text("❗ Введи число (задержку в секундах).")
-            return
-
-    # 3. Всё остальное игнорим
-    update.message.reply_text("Используй кнопки ниже 👇")
+            update.message.reply_text("Введи число для задержки в секундах.")
+    else:
+        update.message.reply_text("Пожалуйста, используй кнопки управления.")
 
 
 @require_activation
@@ -283,10 +303,10 @@ def show_game_choice(update: Update, context: CallbackContext, page=0):
         )
 
 
+
 @require_activation
 def show_group_menu(update: Update, context: CallbackContext):
-    query = update.callback_query
-    user_id = query.message.chat_id
+    user_id = update.callback_query.message.chat_id
     game = user_state[user_id]["game"]
 
     buttons = []
@@ -297,53 +317,50 @@ def show_group_menu(update: Update, context: CallbackContext):
         ])
 
     buttons.append([InlineKeyboardButton("✅ Выбрать все", callback_data="select_all")])
-    buttons.append([InlineKeyboardButton("⬅️ Назад к играм", callback_data="back_to_games")])
     buttons.append([InlineKeyboardButton("Далее ➡️", callback_data="next_delay")])
 
-    query.edit_message_text(
-        text=f"Выбери группы, куда бот будет постить сообщения ({game}):",
+    context.bot.send_message(
+        chat_id=user_id,
+        text=f"Выбери группы в которую хочешь что бы бот постил твое сообщения ({game}):",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
+
 
 @require_activation
 def show_launch_button(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
+
     keyboard = [[
         InlineKeyboardButton("🚀 Запустить пиар", callback_data="launch"),
         InlineKeyboardButton("🛑 Остановить пиар", callback_data="stop")
     ]]
+
     context.bot.send_message(
         chat_id=user_id,
         text=f"Текст и группы выбраны.\nЗадержка: {user_state[user_id]['delay']} сек.",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
+
 @require_activation
 def button_handler(update: Update, context: CallbackContext):
     query = update.callback_query
-    query.answer()
-
     user_id = query.message.chat_id
     data = query.data
+
+    query.answer()
     state = user_state[user_id]
 
     if data.startswith("games_page_"):
         page = int(data.split("_")[-1])
+        query.delete_message()
         show_game_choice(update, context, page)
         return
 
-    elif data.startswith("game_"):
+    if data.startswith("game_"):
         state["game"] = data.split("game_")[1]
         state["groups"] = []
         show_group_menu(update, context)
-        return
-
-    elif data == "back_to_games":
-        state["game"] = None
-        state["groups"] = []
-        state["delay"] = None
-        show_game_choice(update, context, 0)
-        return
 
     elif data.startswith("group_"):
         gid = int(data.split("_")[1])
@@ -352,12 +369,10 @@ def button_handler(update: Update, context: CallbackContext):
         else:
             state["groups"].append(gid)
         show_group_menu(update, context)
-        return
 
     elif data == "select_all":
         state["groups"] = list(GAME_GROUPS[state["game"]].values())
         show_group_menu(update, context)
-        return
 
     elif data == "next_delay":
         if not state["groups"]:
@@ -368,7 +383,6 @@ def button_handler(update: Update, context: CallbackContext):
             f"Теперь введи задержку в секундах перед запуском пиара:\n"
             f"⚠️ Минимальная задержка — {MIN_DELAY} секунд"
         )
-        return
 
     elif data == "launch":
         if not state["text"] or not state["groups"] or state["delay"] is None:
@@ -384,24 +398,26 @@ def button_handler(update: Update, context: CallbackContext):
             chat_id=user_id,
             text=f"🚀 Пиар каждые {state['delay']} сек."
         )
+
         log(context, f"🚀 START PIAR\nID: {user_id}\nDelay: {state['delay']}")
         threading.Thread(
             target=post_to_vk_loop,
             args=(user_id, context),
             daemon=True
         ).start()
-        return
 
     elif data == "stop":
         state["is_running"] = False
         context.bot.send_message(chat_id=user_id, text="🛑 Пиар остановлен.")
         log(context, f"🛑 STOP PIAR\nID: {user_id}")
-        return
+
 
 def post_to_vk_loop(user_id, context: CallbackContext):
     state = user_state[user_id]
+
     while state.get("is_running"):
         results = []
+
         for group_id in state["groups"]:
             try:
                 final_text = add_random_emoji(state["text"])
@@ -409,8 +425,10 @@ def post_to_vk_loop(user_id, context: CallbackContext):
                 results.append(f"✅ В группу {abs(group_id)}")
             except Exception as e:
                 results.append(f"❌ Ошибка в {abs(group_id)}: {e}")
+
         context.bot.send_message(chat_id=user_id, text="\n".join(results))
         time.sleep(state["delay"])
+
 
 def main():
     updater = Updater(TG_TOKEN, use_context=True)
@@ -425,6 +443,7 @@ def main():
     updater.start_polling()
     print("Бот запущен")
     updater.idle()
+
 
 if __name__ == '__main__':
     main()
