@@ -159,8 +159,8 @@ def require_activation(func):
     return wrapper
 
 def add_random_emoji(text: str) -> str:
-    # шанс добавить эмодзи (80%)
-    if random.random() < 0.8:
+    # шанс добавить эмодзи (95%)
+    if random.random() < 0.95:
         return f"{text}\n\n{random.choice(EMOJIS)}"
     return text
 
@@ -327,4 +327,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
