@@ -232,6 +232,7 @@ def handle_text(update: Update, context: CallbackContext):
     else:
         update.message.reply_text("Пожалуйста, используй кнопки управления.")
 
+@require_activation
 def show_game_choice(update: Update, context: CallbackContext, page=0):
     user_id = update.effective_chat.id
     games = list(GAME_GROUPS.keys())
@@ -273,18 +274,23 @@ def show_game_choice(update: Update, context: CallbackContext, page=0):
 
 @require_activation
 def show_group_menu(update: Update, context: CallbackContext):
-    user_id = update.callback_query.message.chat_id
+    query = update.callback_query
+    user_id = query.message.chat_id
     game = user_state[user_id]["game"]
+
     buttons = []
     for name, gid in GAME_GROUPS[game].items():
         selected = "✅" if gid in user_state[user_id]["groups"] else ""
-        buttons.append([InlineKeyboardButton(f"{selected} {name}", callback_data=f"group_{gid}")])
+        buttons.append([
+            InlineKeyboardButton(f"{selected} {name}", callback_data=f"group_{gid}")
+        ])
+
     buttons.append([InlineKeyboardButton("✅ Выбрать все", callback_data="select_all")])
     buttons.append([InlineKeyboardButton("⬅️ Назад к играм", callback_data="back_to_games")])
     buttons.append([InlineKeyboardButton("Далее ➡️", callback_data="next_delay")])
-    context.bot.send_message(
-        chat_id=user_id,
-        text=f"Выбери группы в которую хочешь что бы бот постил твое сообщения ({game}):",
+
+    query.edit_message_text(
+        text=f"Выбери группы, куда бот будет постить сообщения ({game}):",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
@@ -304,20 +310,29 @@ def show_launch_button(update: Update, context: CallbackContext):
 @require_activation
 def button_handler(update: Update, context: CallbackContext):
     query = update.callback_query
+    query.answer()
+
     user_id = query.message.chat_id
     data = query.data
-    query.answer()
     state = user_state[user_id]
+
     if data.startswith("games_page_"):
         page = int(data.split("_")[-1])
         show_game_choice(update, context, page)
         return
 
-
-    if data.startswith("game_"):
+    elif data.startswith("game_"):
         state["game"] = data.split("game_")[1]
         state["groups"] = []
         show_group_menu(update, context)
+        return
+
+    elif data == "back_to_games":
+        state["game"] = None
+        state["groups"] = []
+        show_game_choice(update, context, 0)
+        return
+
     elif data.startswith("group_"):
         gid = int(data.split("_")[1])
         if gid in state["groups"]:
@@ -325,32 +340,51 @@ def button_handler(update: Update, context: CallbackContext):
         else:
             state["groups"].append(gid)
         show_group_menu(update, context)
+        return
+
     elif data == "select_all":
         state["groups"] = list(GAME_GROUPS[state["game"]].values())
         show_group_menu(update, context)
+        return
+
     elif data == "next_delay":
         if not state["groups"]:
             query.answer("❗ Выбери хотя бы одну группу.", show_alert=True)
             return
+
         query.edit_message_text(
-    f"Теперь введи задержку в секундах перед запуском пиара:\n"
-    f"⚠️ Минимальная задержка — {MIN_DELAY} секунд"
-)
+            f"Теперь введи задержку в секундах перед запуском пиара:\n"
+            f"⚠️ Минимальная задержка — {MIN_DELAY} секунд"
+        )
+        return
+
     elif data == "launch":
         if not state["text"] or not state["groups"] or state["delay"] is None:
             context.bot.send_message(chat_id=user_id, text="❗ Заполнены не все параметры.")
             return
+
         if state["is_running"]:
             context.bot.send_message(chat_id=user_id, text="⚠️ Пиар уже идёт.")
             return
+
         state["is_running"] = True
-        context.bot.send_message(chat_id=user_id, text=f"🚀 Пиар каждые {state['delay']} сек.")
+        context.bot.send_message(
+            chat_id=user_id,
+            text=f"🚀 Пиар каждые {state['delay']} сек."
+        )
         log(context, f"🚀 START PIAR\nID: {user_id}\nDelay: {state['delay']}")
-        threading.Thread(target=post_to_vk_loop, args=(user_id, context), daemon=True).start()
+        threading.Thread(
+            target=post_to_vk_loop,
+            args=(user_id, context),
+            daemon=True
+        ).start()
+        return
+
     elif data == "stop":
         state["is_running"] = False
         context.bot.send_message(chat_id=user_id, text="🛑 Пиар остановлен.")
         log(context, f"🛑 STOP PIAR\nID: {user_id}")
+        return
 
 def post_to_vk_loop(user_id, context: CallbackContext):
     state = user_state[user_id]
@@ -382,6 +416,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
