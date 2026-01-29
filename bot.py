@@ -252,7 +252,8 @@ def handle_text(update: Update, context: CallbackContext):
             delay = int(update.message.text)
             if delay < MIN_DELAY:
                 update.message.reply_text(
-                    f"⛔ Минимальная задержка — {MIN_DELAY} секунд."
+                    "Теперь введи задержку в секундах перед запуском пиара:\n"
+                    f"⚠️ Минимальная задержка — {MIN_DELAY} секунд."
                 )
                 return
             state["delay"] = delay
@@ -313,7 +314,7 @@ def show_group_menu(update: Update, context: CallbackContext):
 
     context.bot.send_message(
         chat_id=user_id,
-        text=f"Выбери группы ({game}):",
+        text=f"🚀 Выбери группы для пиара. ({game}):",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
@@ -327,7 +328,7 @@ def show_launch_button(update: Update, context: CallbackContext):
 
     context.bot.send_message(
         chat_id=user_id,
-        text=f"Задержка: {user_state[user_id]['delay']} сек.",
+        text=f"Текст и группы выбраны.\nЗадержка: {user_state[user_id]['delay']} сек.",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -421,4 +422,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
