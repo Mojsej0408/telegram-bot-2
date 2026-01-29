@@ -261,7 +261,6 @@ def handle_text(update: Update, context: CallbackContext):
             update.message.reply_text("Введи число для задержки.")
 
 
-@require_activation
 def show_game_choice(update: Update, context: CallbackContext, page=0):
     user_id = update.effective_chat.id
     games = list(GAME_GROUPS.keys())
@@ -298,7 +297,6 @@ def show_game_choice(update: Update, context: CallbackContext, page=0):
 
 
 
-@require_activation
 def show_group_menu(update: Update, context: CallbackContext):
     user_id = update.callback_query.message.chat_id
     game = user_state[user_id]["game"]
@@ -320,7 +318,6 @@ def show_group_menu(update: Update, context: CallbackContext):
     )
 
 
-@require_activation
 def show_launch_button(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
     keyboard = [[
@@ -424,3 +421,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
