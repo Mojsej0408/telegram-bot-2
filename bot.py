@@ -327,7 +327,6 @@ def button_handler(update: Update, context: CallbackContext):
         return
 
     elif data == "back_to_games":
-        state["text"] = None 
         state["game"] = None
         state["groups"] = []
         state["delay"] = None
@@ -417,6 +416,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
