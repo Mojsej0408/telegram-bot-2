@@ -14,7 +14,7 @@ from PIL import Image
 
 
 # === КОНФИГ ===
-TG_TOKEN = '8126065320:AAEoHYrWhsKm6U6Qppv22Gzubus1sStERkY'
+TG_TOKEN = '7648973124:AAGfrBkPu7T6FPSHnL_1g72Ph5tqor76PEw'
 VK_TOKEN = 'vk1.a.MUz6b5M2fFq0gwLPT5-8YGj-BBgjv8iXWtSs9Y2fXLlvIXK5IQot7Y2TkgQOi94Zu0Iy49prjYNTR1wa9Tu60Fr1-T8J1_hEQgN6M1RPin5qYSSd8FSIeuzo43-00CYU6QZ8GTy7gsEhAQyAwI6JwygmR_3y3vCJztuV8A7BMk-CY9gdq4QzXIEvcLJamm7MJIV3Wa0oEzA6xSticp-kAg'
 
 ADMIN_IDS = [5978354820]  # ЗАМЕНИ на свой Telegram ID
@@ -327,3 +327,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
