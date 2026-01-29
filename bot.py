@@ -14,12 +14,17 @@ from PIL import Image
 
 
 # === КОНФИГ ===
-TG_TOKEN = '7648973124:AAGfrBkPu7T6FPSHnL_1g72Ph5tqor76PEw'
+TG_TOKEN = '8126065320:AAEoHYrWhsKm6U6Qppv22Gzubus1sStERkY'
 VK_TOKEN = 'vk1.a.MUz6b5M2fFq0gwLPT5-8YGj-BBgjv8iXWtSs9Y2fXLlvIXK5IQot7Y2TkgQOi94Zu0Iy49prjYNTR1wa9Tu60Fr1-T8J1_hEQgN6M1RPin5qYSSd8FSIeuzo43-00CYU6QZ8GTy7gsEhAQyAwI6JwygmR_3y3vCJztuV8A7BMk-CY9gdq4QzXIEvcLJamm7MJIV3Wa0oEzA6xSticp-kAg'
 
 ADMIN_IDS = [5978354820]  # ЗАМЕНИ на свой Telegram ID
 ACTIVATION_FILE = 'activations.json'
 MIN_DELAY = 300
+EMOJIS = [
+    "🔥", "🚀", "🎮", "💥", "⚡", "👾", "😎",
+    "💎", "🧠", "📢", "✨", "🎯"
+]
+
 
 
 # === ГРУППЫ ===
@@ -152,6 +157,13 @@ def require_activation(func):
             return
         return func(update, context)
     return wrapper
+
+def add_random_emoji(text: str) -> str:
+    # шанс добавить эмодзи (80%)
+    if random.random() < 0.8:
+        return f"{text}\n\n{random.choice(EMOJIS)}"
+    return text
+
 
 # === ОСНОВНОЙ ФУНКЦИОНАЛ ===
 @require_activation
@@ -291,7 +303,8 @@ def post_to_vk_loop(user_id, context: CallbackContext):
         results = []
         for group_id in state["groups"]:
             try:
-                vk.wall.post(owner_id=group_id, message=state["text"])
+                final_text = add_random_emoji(state["text"])
+                vk.wall.post(owner_id=group_id, message=final_text)
                 results.append(f"✅ В группу {abs(group_id)}")
             except Exception as e:
                 results.append(f"❌ Ошибка в {abs(group_id)}: {e}")
@@ -314,4 +327,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
