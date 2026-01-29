@@ -289,7 +289,7 @@ def show_game_choice(update: Update, context: CallbackContext, page=0):
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     else:
-        update.callback_query.edit_message_text(
+        context.bot.send_message(
             chat_id=user_id,
             text="Выбери игру для которой хочешь запустить пиар:",
             reply_markup=InlineKeyboardMarkup(keyboard)
@@ -422,3 +422,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
