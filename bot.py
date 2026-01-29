@@ -200,7 +200,6 @@ def start(update: Update, context: CallbackContext):
     update.message.reply_text("Привет! Отправь мне текст для пиара.")
     log(context, f"▶️ START\nID: {user_id}")
 
-@require_activation
 def handle_text(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
 
@@ -418,5 +417,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
