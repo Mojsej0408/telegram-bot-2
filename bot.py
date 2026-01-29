@@ -18,6 +18,7 @@ TG_TOKEN = '7648973124:AAGfrBkPu7T6FPSHnL_1g72Ph5tqor76PEw'
 VK_TOKEN = 'vk1.a.MUz6b5M2fFq0gwLPT5-8YGj-BBgjv8iXWtSs9Y2fXLlvIXK5IQot7Y2TkgQOi94Zu0Iy49prjYNTR1wa9Tu60Fr1-T8J1_hEQgN6M1RPin5qYSSd8FSIeuzo43-00CYU6QZ8GTy7gsEhAQyAwI6JwygmR_3y3vCJztuV8A7BMk-CY9gdq4QzXIEvcLJamm7MJIV3Wa0oEzA6xSticp-kAg'
 
 ADMIN_IDS = [5978354820]  # ЗАМЕНИ на свой Telegram ID
+ADMIN_LOG_CHAT_ID = -5245355032  # ID группы
 ACTIVATION_FILE = 'activations.json'
 MIN_DELAY = 300
 EMOJIS = [
@@ -85,6 +86,7 @@ def load_activations():
 def save_activations(data):
     with open(ACTIVATION_FILE, 'w') as f:
         json.dump(data, f, indent=2)
+        
 
 def generate_code(duration_days):
     code = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
@@ -131,7 +133,7 @@ def activate(update: Update, context: CallbackContext):
     data[code]['user_id'] = user_id
     data[code]['expires_at'] = expires
     save_activations(data)
-
+    log(context, f"🔑 АКТИВАЦИЯ\nID: {user_id}\nKEY: {code}")
     update.message.reply_text(f"✅ Активация успешна! Доступ до: {expires}")
 
 def gen_code(update: Update, context: CallbackContext):
@@ -159,11 +161,16 @@ def require_activation(func):
     return wrapper
 
 def add_random_emoji(text: str) -> str:
-    # шанс добавить эмодзи (95%)
+    # шанс добавить эмодзи (80%)
     if random.random() < 0.95:
         return f"{text}\n\n{random.choice(EMOJIS)}"
     return text
 
+def log(context, text):
+    try:
+        context.bot.send_message(ADMIN_LOG_CHAT_ID, text)
+    except:
+        pass
 
 # === ОСНОВНОЙ ФУНКЦИОНАЛ ===
 @require_activation
@@ -181,6 +188,7 @@ def start(update: Update, context: CallbackContext):
         "is_running": False
     }
     update.message.reply_text("Привет! Отправь мне текст для пиара.")
+    log(context, f"▶️ START\nID: {user_id}")
 
 @require_activation
 def handle_text(update: Update, context: CallbackContext):
@@ -292,10 +300,12 @@ def button_handler(update: Update, context: CallbackContext):
             return
         state["is_running"] = True
         context.bot.send_message(chat_id=user_id, text=f"🚀 Пиар каждые {state['delay']} сек.")
+        log(context, f"🚀 START PIAR\nID: {user_id}\nDelay: {state['delay']}")
         threading.Thread(target=post_to_vk_loop, args=(user_id, context), daemon=True).start()
     elif data == "stop":
         state["is_running"] = False
         context.bot.send_message(chat_id=user_id, text="🛑 Пиар остановлен.")
+        log(context, f"🛑 STOP PIAR\nID: {user_id}")
 
 def post_to_vk_loop(user_id, context: CallbackContext):
     state = user_state[user_id]
@@ -327,5 +337,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
