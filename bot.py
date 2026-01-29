@@ -185,15 +185,25 @@ def gen_code(update: Update, context: CallbackContext):
 
 def require_activation(func):
     def wrapper(update: Update, context: CallbackContext):
-        user_id = update.effective_chat.id
+        if update.effective_chat:
+            user_id = update.effective_chat.id
+        elif update.message:
+            user_id = update.message.chat_id
+        elif update.callback_query:
+            user_id = update.callback_query.message.chat_id
+        else:
+            return
+
         if not check_activation(user_id):
             context.bot.send_message(
                 chat_id=user_id,
                 text="🔒 Пожалуйста, активируйте доступ командой /activate <код>"
             )
             return
+
         return func(update, context)
     return wrapper
+
 
 
 def add_random_emoji(text: str) -> str:
@@ -246,8 +256,10 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     if state["game"] is None:
-        update.message.reply_text("❗ Сначала выбери игру кнопками выше.")
-        return
+       update.message.reply_text("❗ Выбери игру кнопками ниже 👇")
+       show_game_choice(update, context, 0)
+       return
+
 
     elif state["delay"] is None:
         try:
@@ -452,4 +464,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
