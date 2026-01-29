@@ -309,7 +309,6 @@ def button_handler(update: Update, context: CallbackContext):
     state = user_state[user_id]
     if data.startswith("games_page_"):
         page = int(data.split("_")[-1])
-        query.delete_message()
         show_game_choice(update, context, page)
         return
 
@@ -382,4 +381,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
