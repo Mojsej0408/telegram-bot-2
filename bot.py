@@ -311,7 +311,7 @@ def show_group_menu(update: Update, context: CallbackContext):
     buttons.append([InlineKeyboardButton("✅ Выбрать все", callback_data="select_all")])
     buttons.append([InlineKeyboardButton("Далее ➡️", callback_data="next_delay")])
 
-    context.bot.send_message(
+    update.callback_query.edit_message_text(
         chat_id=user_id,
         text=f"🚀 Выбери группы для пиара. ({game}):",
         reply_markup=InlineKeyboardMarkup(buttons)
@@ -422,4 +422,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
